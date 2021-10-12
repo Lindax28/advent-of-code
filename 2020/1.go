@@ -22,6 +22,13 @@ For example, suppose your expense report contained the following:
 In this list, the two entries that sum to 2020 are 1721 and 299. Multiplying them together produces 1721 * 299 = 514579, so the correct answer is 514579.
 
 Of course, your expense report is much larger. Find the two entries that sum to 2020; what do you get if you multiply them together?
+
+--- Part Two ---
+The Elves in accounting are thankful for your help; one of them even offers you a starfish coin they had left over from a past vacation. They offer you a second one if you can find three numbers in your expense report that meet the same criteria.
+
+Using the above example again, the three entries that sum to 2020 are 979, 366, and 675. Multiplying them together produces the answer, 241861950.
+
+In your expense report, what is the product of the three entries that sum to 2020?
 */
 
 package main
@@ -51,20 +58,42 @@ func readLines(path string) ([]string, error) {
 }
 
 func main() {
-	seen := make(map[int]bool)
+	seen1 := make(map[int]bool)
+	seen2 := make(map[int]bool)
+	found3 := false
+
 	lines, err := readLines("1_data.txt")
 	if err != nil {
 		log.Fatalf("readLines: %s", err)
 	}
-	for _, year := range lines {
-		num, err := strconv.Atoi(year)
+
+	for i, year := range lines {
+		num1, err := strconv.Atoi(year)
 		if err != nil {
 			log.Fatalf("strconv: %s", err)
 		}
-		if seen[2020-num] {
-			fmt.Println(num * (2020 - num))
-			os.Exit(0)
+		if seen1[2020-num1] {
+			fmt.Println("Product of 2 entries: ", num1*(2020-num1))
+			break
 		}
-		seen[num] = true
+		seen1[num1] = true
+		for i2, year2 := range lines {
+			if found3 {
+				break
+			}
+			if i == i2 {
+				continue
+			}
+			num2, err := strconv.Atoi(year2)
+			if err != nil {
+				log.Fatalf("strconv: %s", err)
+			}
+			if seen2[2020-num1-num2] {
+				fmt.Println("Product of 3 entries: ", num1*num2*(2020-num1-num2))
+				found3 = true
+				break
+			}
+			seen2[num2] = true
+		}
 	}
 }
