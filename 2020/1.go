@@ -50,17 +50,8 @@ func readLines(path string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
-// `contains` returns whether a string array contains a given string
-func contains(s []string, str string) bool {
-	for _, v := range s {
-		if v == str {
-			return true
-		}
-	}
-	return false
-}
-
 func main() {
+	seen := make(map[int]bool)
 	lines, err := readLines("1_data.txt")
 	if err != nil {
 		log.Fatalf("readLines: %s", err)
@@ -70,9 +61,10 @@ func main() {
 		if err != nil {
 			log.Fatalf("strconv: %s", err)
 		}
-		if contains(lines, strconv.Itoa(2020-num)) {
+		if seen[2020-num] {
 			fmt.Println(num * (2020 - num))
-			break
+			os.Exit(0)
 		}
+		seen[num] = true
 	}
 }
