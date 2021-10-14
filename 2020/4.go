@@ -115,8 +115,28 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
+	"strconv"
 	"strings"
 )
+
+const minByr int = 1920
+const maxByr int = 2002
+const minIyr int = 2010
+const maxIyr int = 2020
+const minEyr int = 2020
+const maxEyr int = 2030
+const minHgtCm int = 150
+const maxHgtCm int = 193
+const minHgtIn int = 59
+const maxHgtIn int = 76
+
+var hcl = []string{"amb", "blu", "brn", "gry", "grn", "hzl", "oth"}
+
+// `delim` returns a boolean when specified delimiters are matched
+func delim(c rune) bool {
+	return c == ':' || c == ' '
+}
 
 // `allTrue` returns whether every value of a slice is true
 func allTrue(s []bool) bool {
@@ -128,9 +148,58 @@ func allTrue(s []bool) bool {
 	return true
 }
 
+func validateYear(s string, minYr int, maxYr int) bool {
+	re := regexp.MustCompile(`^(19|20)\d\d$`)
+	if re.Match([]byte(s)) {
+		year, _ := strconv.Atoi(s)
+		if year >= minYr && year <= maxYr {
+			return true
+		}
+	}
+	return false
+}
+
+func validateHgt(s string) bool {
+	reCm := regexp.MustCompile(`^\d{3}cm$`)
+	reIn := regexp.MustCompile(`^\d{2}in$`)
+	if reCm.Match([]byte(s)) {
+		cm, _ := strconv.Atoi(s[:len(s)-2])
+		if cm >= minHgtCm && cm <= maxHgtCm {
+			return true
+		}
+	} else if reIn.Match([]byte(s)) {
+		in, _ := strconv.Atoi(s[:len(s)-2])
+		if in >= minHgtIn && in <= maxHgtIn {
+			return true
+		}
+	}
+	return false
+}
+
+func validateHcl(s string) bool {
+	re := regexp.MustCompile(`^#[a-z0-9]{6}$`)
+	return re.Match([]byte(s))
+}
+
+func validateEcl(s string) bool {
+	for _, color := range hcl {
+		if color == s {
+			return true
+		}
+	}
+	return false
+}
+
+func validatePid(s string) bool {
+	re := regexp.MustCompile(`^[0-9]{9}$`)
+	return re.Match([]byte(s))
+}
+
 func main() {
 	fields := []string{"byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"}
-	found := []bool{false, false, false, false, false, false, false}
+	present := []bool{false, false, false, false, false, false, false}
+	valid := []bool{false, false, false, false, false, false, false}
+	presentCount := 0
 	validCount := 0
 
 	file, err := os.Open("4_data.txt")
@@ -141,22 +210,48 @@ func main() {
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		line := scanner.Text()
-		if line == "" {
-			if allTrue(found) {
+		line := strings.FieldsFunc(scanner.Text(), delim)
+		if len(line) == 0 {
+			if allTrue(present) {
+				presentCount += 1
+			}
+			if allTrue(valid) {
 				validCount += 1
 			}
-			found = []bool{false, false, false, false, false, false, false}
+			present = []bool{false, false, false, false, false, false, false}
+			valid = []bool{false, false, false, false, false, false, false}
 		} else {
-			for i, v := range fields {
-				if strings.Contains(line, v) {
-					found[i] = true
+			for i, value := range line {
+				for j, field := range fields {
+					if value == field {
+						present[j] = true
+						switch j {
+						case 0:
+							valid[j] = validateYear(line[i+1], minByr, maxByr)
+						case 1:
+							valid[j] = validateYear(line[i+1], minIyr, maxIyr)
+						case 2:
+							valid[j] = validateYear(line[i+1], minEyr, maxEyr)
+						case 3:
+							valid[j] = validateHgt(line[i+1])
+						case 4:
+							valid[j] = validateHcl(line[i+1])
+						case 5:
+							valid[j] = validateEcl(line[i+1])
+						case 6:
+							valid[j] = validatePid(line[i+1])
+						}
+					}
 				}
 			}
 		}
 	}
-	if allTrue(found) {
+	if allTrue(present) {
+		presentCount += 1
+	}
+	if allTrue(valid) {
 		validCount += 1
 	}
-	fmt.Println("Valid passports: ", validCount)
+	fmt.Println("Passports with required fields present: ", presentCount)
+	fmt.Println("Passports with valid fields: ", validCount)
 }
