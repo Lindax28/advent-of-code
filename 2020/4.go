@@ -120,24 +120,6 @@ import (
 	"strings"
 )
 
-const minByr int = 1920
-const maxByr int = 2002
-const minIyr int = 2010
-const maxIyr int = 2020
-const minEyr int = 2020
-const maxEyr int = 2030
-const minHgtCm int = 150
-const maxHgtCm int = 193
-const minHgtIn int = 59
-const maxHgtIn int = 76
-
-var hcl = []string{"amb", "blu", "brn", "gry", "grn", "hzl", "oth"}
-
-// `delim` returns a boolean when specified delimiters are matched
-func delim(c rune) bool {
-	return c == ':' || c == ' '
-}
-
 // `allTrue` returns whether every value of a slice is true
 func allTrue(s []bool) bool {
 	for _, v := range s {
@@ -159,30 +141,31 @@ func validateYear(s string, minYr int, maxYr int) bool {
 	return false
 }
 
-func validateHgt(s string) bool {
+func validateHeight(s string) bool {
 	reCm := regexp.MustCompile(`^\d{3}cm$`)
 	reIn := regexp.MustCompile(`^\d{2}in$`)
 	if reCm.Match([]byte(s)) {
 		cm, _ := strconv.Atoi(s[:len(s)-2])
-		if cm >= minHgtCm && cm <= maxHgtCm {
+		if cm >= 150 && cm <= 193 {
 			return true
 		}
 	} else if reIn.Match([]byte(s)) {
 		in, _ := strconv.Atoi(s[:len(s)-2])
-		if in >= minHgtIn && in <= maxHgtIn {
+		if in >= 59 && in <= 76 {
 			return true
 		}
 	}
 	return false
 }
 
-func validateHcl(s string) bool {
+func validateHaircolor(s string) bool {
 	re := regexp.MustCompile(`^#[a-z0-9]{6}$`)
 	return re.Match([]byte(s))
 }
 
-func validateEcl(s string) bool {
-	for _, color := range hcl {
+func validateEyecolor(s string) bool {
+	eyecolors := []string{"amb", "blu", "brn", "gry", "grn", "hzl", "oth"}
+	for _, color := range eyecolors {
 		if color == s {
 			return true
 		}
@@ -190,7 +173,7 @@ func validateEcl(s string) bool {
 	return false
 }
 
-func validatePid(s string) bool {
+func validatePassportId(s string) bool {
 	re := regexp.MustCompile(`^[0-9]{9}$`)
 	return re.Match([]byte(s))
 }
@@ -210,7 +193,7 @@ func main() {
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		line := strings.FieldsFunc(scanner.Text(), delim)
+		line := strings.FieldsFunc(scanner.Text(), func(c rune) bool { return c == ':' || c == ' ' })
 		if len(line) == 0 {
 			if allTrue(present) {
 				presentCount += 1
@@ -227,19 +210,19 @@ func main() {
 						present[j] = true
 						switch j {
 						case 0:
-							valid[j] = validateYear(line[i+1], minByr, maxByr)
+							valid[j] = validateYear(line[i+1], 1920, 2002)
 						case 1:
-							valid[j] = validateYear(line[i+1], minIyr, maxIyr)
+							valid[j] = validateYear(line[i+1], 2010, 2020)
 						case 2:
-							valid[j] = validateYear(line[i+1], minEyr, maxEyr)
+							valid[j] = validateYear(line[i+1], 2020, 2030)
 						case 3:
-							valid[j] = validateHgt(line[i+1])
+							valid[j] = validateHeight(line[i+1])
 						case 4:
-							valid[j] = validateHcl(line[i+1])
+							valid[j] = validateHaircolor(line[i+1])
 						case 5:
-							valid[j] = validateEcl(line[i+1])
+							valid[j] = validateEyecolor(line[i+1])
 						case 6:
-							valid[j] = validatePid(line[i+1])
+							valid[j] = validatePassportId(line[i+1])
 						}
 					}
 				}
