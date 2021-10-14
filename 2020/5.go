@@ -35,6 +35,15 @@ BFFFBBFRRR: row 70, column 7, seat ID 567.
 FFFBBBFRRR: row 14, column 7, seat ID 119.
 BBFFBBFRLL: row 102, column 4, seat ID 820.
 As a sanity check, look through your list of boarding passes. What is the highest seat ID on a boarding pass?
+
+--- Part Two ---
+Ding! The "fasten seat belt" signs have turned on. Time to find your seat.
+
+It's a completely full flight, so your seat should be the only missing boarding pass in your list. However, there's a catch: some of the seats at the very front and back of the plane don't exist on this aircraft, so they'll be missing from your list as well.
+
+Your seat wasn't at the very front or back, though; the seats with IDs +1 and -1 from yours will be in your list.
+
+What is the ID of your seat?
 */
 
 package main
@@ -44,6 +53,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 )
 
 func findRow(s string) int {
@@ -72,6 +82,7 @@ func findColumn(s string) int {
 
 func main() {
 	maxID := 0
+	seatIDs := make([]int, 0)
 	file, err := os.Open("5_data.txt")
 	if err != nil {
 		log.Fatal(err)
@@ -82,9 +93,17 @@ func main() {
 	for scanner.Scan() {
 		line := scanner.Text()
 		seatID := findRow(line[:7])*8 + findColumn(line[7:])
+		seatIDs = append(seatIDs, seatID)
 		if seatID > maxID {
 			maxID = seatID
 		}
 	}
-	fmt.Println(maxID)
+	fmt.Println("Highest seat: ", maxID)
+	sort.Ints(seatIDs)
+	for i, id := range seatIDs {
+		if !(seatIDs[i+1] == id+1) {
+			fmt.Println("Available seat: ", id+1)
+			break
+		}
+	}
 }
