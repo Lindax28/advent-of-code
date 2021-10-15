@@ -37,6 +37,39 @@ The last group contains one person who answered "yes" to only 1 question, b.
 In this example, the sum of these counts is 3 + 3 + 3 + 1 + 1 = 11.
 
 For each group, count the number of questions to which anyone answered "yes". What is the sum of those counts?
+
+--- Part Two ---
+As you finish the last group's customs declaration, you notice that you misread one word in the instructions:
+
+You don't need to identify the questions to which anyone answered "yes"; you need to identify the questions to which everyone answered "yes"!
+
+Using the same example as above:
+
+abc
+
+a
+b
+c
+
+ab
+ac
+
+a
+a
+a
+a
+
+b
+This list represents answers from five groups:
+
+In the first group, everyone (all 1 person) answered "yes" to 3 questions: a, b, and c.
+In the second group, there is no question to which everyone answered "yes".
+In the third group, everyone answered yes to only 1 question, a. Since some people did not answer "yes" to b or c, they don't count.
+In the fourth group, everyone answered yes to only 1 question, a.
+In the fifth group, everyone (all 1 person) answered "yes" to 1 question, b.
+In this example, the sum of these counts is 3 + 0 + 1 + 1 + 1 = 6.
+
+For each group, count the number of questions to which everyone answered "yes". What is the sum of those counts?
 */
 
 package main
@@ -50,7 +83,10 @@ import (
 
 func main() {
 	yesPerGroup := make(map[rune]bool)
-	count := 0
+	commonYesPerGroup := make(map[rune]int)
+	anyYesCount := 0
+	allYesCount := 0
+	groupSize := 0
 	file, err := os.Open("6_data.txt")
 	if err != nil {
 		log.Fatal(err)
@@ -61,14 +97,29 @@ func main() {
 	for scanner.Scan() {
 		line := scanner.Text()
 		if line == "" {
-			count += len(yesPerGroup)
+			anyYesCount += len(yesPerGroup)
+			for _, v := range commonYesPerGroup {
+				if v == groupSize {
+					allYesCount += 1
+				}
+			}
 			yesPerGroup = make(map[rune]bool)
+			commonYesPerGroup = make(map[rune]int)
+			groupSize = 0
 		} else {
 			for _, char := range line {
 				yesPerGroup[char] = true
+				commonYesPerGroup[char] += 1
 			}
+			groupSize += 1
 		}
 	}
-	count += len(yesPerGroup)
-	fmt.Println("Count: ", count)
+	anyYesCount += len(yesPerGroup)
+	for _, v := range commonYesPerGroup {
+		if v == groupSize {
+			allYesCount += 1
+		}
+	}
+	fmt.Println("Questions where anyone answered 'yes': ", anyYesCount)
+	fmt.Println("Questions where everyone answered 'yes': ", allYesCount)
 }
