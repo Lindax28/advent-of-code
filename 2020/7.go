@@ -27,6 +27,32 @@ A light red bag, which can hold bright white and muted yellow bags, either of wh
 So, in this example, the number of bag colors that can eventually contain at least one shiny gold bag is 4.
 
 How many bag colors can eventually contain at least one shiny gold bag? (The list of rules is quite long; make sure you get all of it.)
+
+--- Part Two ---
+It's getting pretty expensive to fly these days - not because of ticket prices, but because of the ridiculous number of bags you need to buy!
+
+Consider again your shiny gold bag and the rules from the above example:
+
+faded blue bags contain 0 other bags.
+dotted black bags contain 0 other bags.
+vibrant plum bags contain 11 other bags: 5 faded blue bags and 6 dotted black bags.
+dark olive bags contain 7 other bags: 3 faded blue bags and 4 dotted black bags.
+So, a single shiny gold bag must contain 1 dark olive bag (and the 7 bags within it) plus 2 vibrant plum bags (and the 11 bags within each of those): 1 + 1*7 + 2 + 2*11 = 32 bags!
+
+Of course, the actual rules have a small chance of going several levels deeper than this example; be sure to count all of the bags, even if the nesting becomes topologically impractical!
+
+Here's another example:
+
+shiny gold bags contain 2 dark red bags.
+dark red bags contain 2 dark orange bags.
+dark orange bags contain 2 dark yellow bags.
+dark yellow bags contain 2 dark green bags.
+dark green bags contain 2 dark blue bags.
+dark blue bags contain 2 dark violet bags.
+dark violet bags contain no other bags.
+In this example, a single shiny gold bag must contain 126 other bags.
+
+How many individual bags are required inside your single shiny gold bag?
 */
 
 package main
@@ -36,12 +62,42 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
+func bagsContained(num int, bag string, rules map[string][]string) int {
+	if num == 0 {
+		return 0
+	}
+	total := 0
+	reQuantity := regexp.MustCompile(`^\d+`)
+	reBag := regexp.MustCompile(`[^\d\s].*`)
+	for k, v := range rules {
+		if k == bag {
+			for _, contained := range v {
+				quantity, _ := strconv.Atoi(string(reQuantity.Find([]byte(contained))))
+				containedBag := string(reBag.Find([]byte(contained)))
+				total += num * (quantity + bagsContained(quantity, containedBag, rules))
+			}
+		}
+	}
+	return total
+}
+
+func contains(list []string, s string) bool {
+	for _, v := range list {
+		if strings.Contains(v, s) {
+			return true
+		}
+	}
+	return false
+}
+
 func main() {
-	rules := make(map[string]string)
-	bags := make(map[string]string)
+	rules := make(map[string][]string)
+	bags := make(map[string]bool)
 	file, err := os.Open("7_data.txt")
 	if err != nil {
 		log.Fatal(err)
@@ -51,9 +107,15 @@ func main() {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := strings.Split(scanner.Text(), " bags contain ")
-		rules[line[0]] = line[1]
-		if strings.Contains(line[1], "shiny gold") {
-			bags[line[0]] = line[1]
+		containedString := line[1]
+		containedString = strings.ReplaceAll(containedString, " bags", "")
+		containedString = strings.ReplaceAll(containedString, " bag", "")
+		containedString = strings.ReplaceAll(containedString, ".", "")
+		containedString = strings.ReplaceAll(containedString, "no", "0")
+		containedBags := strings.Split(containedString, ", ")
+		rules[line[0]] = containedBags
+		if strings.Contains(containedString, "shiny gold") {
+			bags[line[0]] = true
 		}
 	}
 
@@ -62,12 +124,14 @@ func main() {
 		complete = true
 		for k, _ := range bags {
 			for l, w := range rules {
-				if bags[l] != w && strings.Contains(w, k) {
-					bags[l] = w
+				if _, found := bags[l]; !found && contains(w, k) {
+					bags[l] = true
 					complete = false
 				}
 			}
 		}
 	}
-	fmt.Println(len(bags))
+	fmt.Println("Bags to contain shiny gold bag: ", len(bags))
+	fmt.Println("Bags required in shiny gold bag: ", bagsContained(1, "shiny gold", rules))
+
 }
