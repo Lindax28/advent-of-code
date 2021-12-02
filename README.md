@@ -1,3 +1,3 @@
 # Advent of Code
 
-Puzzles solved using Golang.
+[Advent of Code](https://adventofcode.com/) puzzles solved using Golang.
