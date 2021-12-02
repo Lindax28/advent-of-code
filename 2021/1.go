@@ -60,42 +60,35 @@ func main() {
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	prev := 0
-	prevSum := 0
-	countSingle := -1
-	countSum := -1
-	window1 := 0
-	window2 := 0
-	window3 := 0
-	index := 0
+	countSingle := 0
+	countSum := 0
+
+	scanner.Scan()
+	window1, _ := strconv.Atoi(scanner.Text())
+	scanner.Scan()
+	window2, _ := strconv.Atoi(scanner.Text())
+	scanner.Scan()
+	window3, _ := strconv.Atoi(scanner.Text())
+
+	if window2 > window1 {
+		countSingle += 1
+	}
+	if window3 > window2 {
+		countSingle += 1
+	}
+
 	for scanner.Scan() {
 		depth, _ := strconv.Atoi(scanner.Text())
-		switch index {
-		case 0:
-			window1 = depth
-		case 1:
-			window2 = depth
-		case 2:
-			window3 = depth
-		default:
-			window1 = window2
-			window2 = window3
-			window3 = depth
-		}
-		if depth > prev {
+		if depth > window3 {
 			countSingle += 1
 		}
-		prev = depth
-		if index < 2 {
-			index += 1
-			continue
-		}
-		index += 1
-		if window1+window2+window3 > prevSum {
+		if depth > window1 {
 			countSum += 1
 		}
-		prevSum = window1 + window2 + window3
+		window1 = window2
+		window2 = window3
+		window3 = depth
 	}
-	fmt.Println("Depth increases:", countSingle)
-	fmt.Println("Depth window increases:", countSum)
+	fmt.Println("# of depth increases:", countSingle)
+	fmt.Println("# of depth-window increases:", countSum)
 }
