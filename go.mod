@@ -1,3 +1,3 @@
-module learning/advent_of_code/2020
+module github.com/Lindax28/advent-of-code
 
 go 1.17
