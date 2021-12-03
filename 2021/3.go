@@ -96,8 +96,23 @@ func main() {
 			}
 		}
 	}
+
+	// Power consumption
+	gamma := float64(0)
+	epsilon := float64(0)
+	exp := float64(-1)
+	for i := len(count) - 1; i >= 0; i-- {
+		exp += 1
+		if count[i] > 0 {
+			gamma += math.Pow(2, exp)
+		} else {
+			epsilon += math.Pow(2, exp)
+		}
+	}
+	fmt.Println("Power consumption:", gamma*epsilon)
+
+	// Life support rating
 	filteredOxygen := data
-	filteredCarbon := data
 	for i, _ := range count {
 		if len(filteredOxygen) == 1 {
 			break
@@ -113,16 +128,17 @@ func main() {
 				}
 			}
 		}
-		newFilteredOxygen := make([]string, 0)
+		temp := make([]string, 0)
 		for _, v := range filteredOxygen {
 			dataString := strings.Split(v, "")
-			if (dataString[i] == "1" && filteredCount[i] > 0) || (dataString[i] == "0" && filteredCount[i] < 0) || (dataString[i] == "1" && filteredCount[i] == 0) {
-				newFilteredOxygen = append(newFilteredOxygen, v)
+			if (dataString[i] == "1" && filteredCount[i] >= 0) || (dataString[i] == "0" && filteredCount[i] < 0) {
+				temp = append(temp, v)
 			}
 		}
-		filteredOxygen = newFilteredOxygen
+		filteredOxygen = temp
 	}
 
+	filteredCarbon := data
 	for i, _ := range count {
 		if len(filteredCarbon) == 1 {
 			break
@@ -138,31 +154,17 @@ func main() {
 				}
 			}
 		}
-		newFilteredCarbon := make([]string, 0)
+		temp := make([]string, 0)
 		for _, v := range filteredCarbon {
 			dataString := strings.Split(v, "")
-			if (dataString[i] == "1" && filteredCount[i] < 0) || (dataString[i] == "0" && filteredCount[i] > 0) || (dataString[i] == "0" && filteredCount[i] == 0) {
-				newFilteredCarbon = append(newFilteredCarbon, v)
+			if (dataString[i] == "1" && filteredCount[i] < 0) || (dataString[i] == "0" && filteredCount[i] >= 0) {
+				temp = append(temp, v)
 			}
 		}
-		filteredCarbon = newFilteredCarbon
+		filteredCarbon = temp
 	}
-
-	gamma := float64(0)
-	epsilon := float64(0)
-	exp := float64(-1)
-	for i := len(count) - 1; i >= 0; i-- {
-		exp += 1
-		if count[i] > 0 {
-			gamma += math.Pow(2, exp)
-		} else {
-			epsilon += math.Pow(2, exp)
-		}
-	}
-	fmt.Println("Power consumption:", gamma*epsilon)
 
 	oxygen, _ := strconv.ParseInt(filteredOxygen[0], 2, 64)
 	carbon, _ := strconv.ParseInt(filteredCarbon[0], 2, 64)
 	fmt.Println("Life support rating:", oxygen*carbon)
-
 }
