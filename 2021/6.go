@@ -75,43 +75,28 @@ func main() {
 	defer file.Close()
 
 	fish := make(map[int]int)
+	total := 0
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := strings.Split(scanner.Text(), ",")
 		for _, age := range line {
 			num, _ := strconv.Atoi(age)
 			fish[num] += 1
+			total += 1
 		}
 	}
 
-	for i := 0; i < 80; i++ {
+	for i := 0; i < 256; i++ {
 		offspring := fish[0]
 		for i := 0; i < 8; i++ {
 			fish[i] = fish[i+1]
 		}
 		fish[6] += offspring
 		fish[8] = offspring
-	}
-
-	total := 0
-	for _, v := range fish {
-		total += v
-	}
-	fmt.Println("80 days:", total)
-
-	// Continue for additional 176 days, for a total of 256 days
-	for i := 0; i < 176; i++ {
-		offspring := fish[0]
-		for i := 0; i < 8; i++ {
-			fish[i] = fish[i+1]
+		total += offspring
+		if i == 79 {
+			fmt.Println("80 days:", total)
 		}
-		fish[6] += offspring
-		fish[8] = offspring
-	}
-
-	total = 0
-	for _, v := range fish {
-		total += v
 	}
 	fmt.Println("256 days:", total)
 }
